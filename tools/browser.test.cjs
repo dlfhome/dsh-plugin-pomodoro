@@ -16,7 +16,7 @@ const { createSuite } = require("./test-runner.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 const BUNDLE = path.join(ROOT, "lib", "client.js");
-const DECLARED_TOKENS = path.join(ROOT, ".reference", "declared-tokens.txt");
+const TOKEN_CONTRACT = path.join(ROOT, "tools", "declared-tokens.txt");
 const SOURCE = fs.readFileSync(BUNDLE, "utf8");
 
 const suite = createSuite();
@@ -790,22 +790,47 @@ test("the local fallback snapshot is referentially stable too", async () => {
 test("the stylesheet only references declared tokens or supplies a fallback", () => {
   const env = mountBundle();
   const css = env.styleTags[0].textContent;
-  const declared = new Set(
-    fs
-      .readFileSync(DECLARED_TOKENS, "utf8")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-  );
+
+  // The contract ships with the repo so the guard works in a clean clone — the
+  // authoritative token dump lives in DSH's own asar and cannot be committed here.
+  const sections = {};
+  let section = null;
+  for (const raw of fs.readFileSync(TOKEN_CONTRACT, "utf8").split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const heading = /^\[([a-z]+)\]$/.exec(line);
+    if (heading) {
+      section = heading[1];
+      sections[section] = new Set();
+      continue;
+    }
+    assert.ok(section, `token declared before any section: ${line}`);
+    sections[section].add(line);
+  }
+  assert.ok(sections.guaranteed && sections.fallback, "both token sections must exist");
+
+  const guaranteed = sections.guaranteed;
+  const needsFallback = sections.fallback;
   const problems = [];
   const pattern = /var\((--[a-z0-9-]+)\s*(,)?/g;
   let match;
   while ((match = pattern.exec(css)) !== null) {
-    if (declared.has(match[1])) continue;
-    if (match[2] === ",") continue; // a fallback makes an undocumented name safe
-    if (match[1].startsWith("--dsh-pomodoro")) continue; // our own override hook
-    problems.push(match[1]);
+    const token = match[1];
+    const hasFallback = match[2] === ",";
+    if (token.startsWith("--dsh-pomodoro")) continue; // our own override hook
+    if (hasFallback) {
+      // A fallback makes an unknown name safe; flagged here only if the contract
+      // claims DSH declares it, so the two lists cannot drift apart.
+      assert.ok(
+        !guaranteed.has(token),
+        `${token} is listed as guaranteed yet is written with a fallback`
+      );
+      continue;
+    }
+    if (guaranteed.has(token)) continue;
+    problems.push(needsFallback.has(token) ? `${token} (contract says: add a fallback)` : token);
   }
+
   assert.deepEqual(problems, [], `undeclared tokens without fallback: ${problems.join(", ")}`);
   env.teardownAll();
 });

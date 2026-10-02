@@ -1,0 +1,42 @@
+# DSH 设计 token 契约
+#
+# 为什么需要这个文件：未声明且无 fallback 的 `var()` 会让**整条 CSS 声明**失效
+# （不是降级到默认值），而前端从未声明过的名字在官方插件里也确实出现过
+# （`--dsw-alias-fill-l1/l2`、`--dsw-font-mono`），照抄就会静默丢样式。
+#
+# 每个 token 只用两种方式之一引用：
+#   [guaranteed] —— DSH 前端静态声明了它，可以直接 `var(--x)`
+#   [fallback]   —— 不是静态声明的（或由 JS 在运行时按需设置），必须写 fallback
+#
+# 维护方式：新增 token 时同时更新这里。若在下方两个小节之外引用了未声明的
+# token 且没写 fallback，browser.test.cjs 的 token 断言会失败并点名该 token。
+
+[guaranteed]
+
+--dsw-alias-bg-layer-1
+--dsw-alias-bg-layer-2
+--dsw-alias-bg-overlay
+--dsw-alias-border-l1
+--dsw-alias-border-l2
+--dsw-alias-brand-primary
+--dsw-alias-interactive-bg-active
+--dsw-alias-interactive-bg-hover
+--dsw-alias-label-primary
+--dsw-alias-label-primary-inverted
+--dsw-alias-label-secondary
+--dsw-alias-label-tertiary
+--dsw-alias-state-idle-primary
+--dsw-alias-state-success-primary
+--dsw-alias-state-warn-primary
+--dsw-elevation-prominent
+--dsw-elevation-soft
+--dsw-radius-lg
+--dsw-radius-sm
+--dsw-radius-xs
+
+[fallback]
+
+# 由 JS 设置在 [data-conversation-scroll] 上，浮层是 fixed 定位、不继承，所以取不到
+--dsh-composer-height
+# 前端从未声明过；ui-jobs 等官方插件引用它时也没有 fallback，等于那条声明是死的
+--dsw-font-mono

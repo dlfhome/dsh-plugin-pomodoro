@@ -98,6 +98,7 @@ dsh plugin --profile <profile> install file:D:\code\dsh-plugin-pomodoro
 | `tools/browser.test.cjs` | 浏览器半侧测试：真实 bundle + React/DOM/fetch/Notification 桩 |
 | `tools/host.test.mjs` | 宿主半侧测试：Node 真实定时器 + 真实磁盘文档 |
 | `tools/check-build.cjs` | 产物一致性检查：过期 bundle 直接让测试失败 |
+| `tools/declared-tokens.txt` | 设计 token 契约：哪些可直接用、哪些必须带 fallback |
 | `tools/sync-plugin.ps1` | 把本目录同步进 profile（客户端 HMR 会重载 bundle） |
 
 ### 为什么浏览器半侧是手写的产物形态
@@ -110,7 +111,7 @@ DSH 的客户端插件不是普通 npm 前端包：宿主半侧把 `dsh.client` 
 
 ### 两条容易踩的坑
 
-- **设计 token 必须真的存在。** 未声明且无 fallback 的 `var()` 会让整条 CSS 声明失效（不是降级）。`--dsw-alias-fill-l1/l2` 这类名字在官方插件里出现过，但前端**从未声明**，照抄会静默丢样式——测试里的 token 断言就是防止这个。
+- **设计 token 必须真的存在。** 未声明且无 fallback 的 `var()` 会让整条 CSS 声明失效（不是降级）。`--dsw-alias-fill-l1/l2`、`--dsw-font-mono` 这类名字在官方插件里出现过，但前端**从未声明**，照抄会静默丢样式。插件用到的 token 记在 `tools/declared-tokens.txt`（分「DSH 静态声明，可直接用」和「必须写 fallback」两类），测试据此断言——所以这份契约随仓库走，干净克隆也能跑，新增 token 忘了登记就会失败并点名。
 - **`shell.overlay` 是点击穿透层。** 官方样式里的 `.overlayLayer > * { pointer-events: auto }` 让直接子元素默认又能接收点击；浮层用 `position: fixed` 并按 `--dsh-composer-height` 让开输入框。
 
 ## 开发
