@@ -1,0 +1,13 @@
+# The pomodoro bundle patch: one row over the empty profile root.
+#
+# A profile bundle contributes Loader rows through a patch file named by
+# `dsh.bundle.patch` in its package.json. This row is the plugin's Node half; the
+# browser half is declared by the package's own `dsh.client` field and served to
+# the page by the client module system from that same Loader row.
+#
+# The row matters even though the Node half does almost nothing, because the client
+# module scan walks enabled Loader entries: no row means no browser bundle.
+
+- insert:
+    - id: dsh-plugin-pomodoro
+      name: '@deepseek-ai/dsh-plugin-pomodoro'

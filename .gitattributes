@@ -1,0 +1,8 @@
+# 客户端 bundle 会被逐字拷进 DSH profile，行尾必须跨平台一致：
+# 仓库内与检出后都用 LF，否则 Windows 检出的 CRLF 会跟着 npm run sync 一起装进去。
+* text=auto eol=lf
+
+# 二进制文件不做行尾转换
+*.png binary
+*.jpg binary
+*.woff2 binary

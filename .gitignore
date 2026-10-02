@@ -1,0 +1,22 @@
+# 开发期间从 DSH 的 app.asar 里抽出的官方实现，仅本地参考：
+# 52.9 MB / 1525 个第三方文件，不随本仓库分发。
+.reference/
+
+# 只读查看器：路径写死本机 app.asar 的绝对位置，不随仓库分发
+tools/asar.mjs
+
+# Node
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# 编辑器与系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
